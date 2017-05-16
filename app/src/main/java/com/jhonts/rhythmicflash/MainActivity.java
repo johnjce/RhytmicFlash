@@ -10,32 +10,27 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.annotation.RequiresApi;
 import android.view.View;
-import android.widget.ImageView;
 
 import java.util.Random;
 
 public class MainActivity extends Activity {
+    private double lastLevel = 0;
+    private int bufferSize;
+    private final int min = 15;
+    private static final int SAMPLE_DELAY = 75;
     private static final int sampleRate = 8000;
     private AudioRecord audio;
-    private int bufferSize;
-    private double lastLevel = 0;
     private Thread thread;
-    private static final int SAMPLE_DELAY = 75;
-    private ImageView backgroundContent;
-
-
-    private final int min = 15;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        backgroundContent = (ImageView)findViewById(R.id.backgroundContent);
-        backgroundContent.setKeepScreenOn(true);
+        View mainView = new View(this);
+        setContentView(mainView);
 
         try {
             bufferSize = AudioRecord
@@ -46,13 +41,15 @@ public class MainActivity extends Activity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    @Override
     protected void onResume() {
         super.onResume();
 
-        View decorView = getWindow().getDecorView();
+        final View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                      | View.SYSTEM_UI_FLAG_FULLSCREEN;
-                        decorView.setSystemUiVisibility(uiOptions);
+                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
 
         audio = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
@@ -61,51 +58,63 @@ public class MainActivity extends Activity {
         audio.startRecording();
         thread = new Thread(new Runnable() {
             public void run() {
-            while(thread != null && !thread.isInterrupted()){
-                try{Thread.sleep(SAMPLE_DELAY);}catch(InterruptedException ie){ie.printStackTrace();}
-                readAudioBuffer();
+                while(thread != null && !thread.isInterrupted()){
+                    try{Thread.sleep(SAMPLE_DELAY);}catch(InterruptedException ie){ie.printStackTrace();}
+                    readAudioBuffer();
 
-                runOnUiThread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                    backgroundContent.setBackgroundColor(Color.parseColor(getColor(lastLevel, min)));
-                    if(lastLevel <= min){
-                        com.jhonts.rhythmicflash.flash.flashOff();
-                    }else {
-                        com.jhonts.rhythmicflash.flash.swichFlash();
-                    }
-                    }
-                });
-            }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel,min)));
+                            if(lastLevel <= min){
+                                com.jhonts.rhythmicflash.flash.flashOff();
+                            }else {
+                                com.jhonts.rhythmicflash.flash.swichFlash();
+                            }
+                        }
+                    });
+                }
             }
         });
         thread.start();
     }
-
 
     @Override
     public void onBackPressed() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle(R.string.delete_title);
         alertDialogBuilder
-            .setMessage(R.string.comfirm_delete)
-            .setCancelable(false)
-            .setPositiveButton(R.string.yes,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            moveTaskToBack(true);
-                            android.os.Process.killProcess(android.os.Process.myPid());
-                            System.exit(1);
-                        }
-                    })
-            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    dialog.cancel();
-                }
-            });
+                .setMessage(R.string.comfirm_delete)
+                .setCancelable(false)
+                .setPositiveButton(R.string.yes,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                moveTaskToBack(true);
+                                android.os.Process.killProcess(android.os.Process.myPid());
+                                System.exit(1);
+                            }
+                        })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        thread.interrupt();
+        thread = null;
+        try {
+            if (audio != null) {
+                audio.stop();
+                audio.release();
+                audio = null;
+            }
+        } catch (Exception e) {e.printStackTrace();}
     }
 
     private String getColor(double lastLevel, int min) {
@@ -138,19 +147,5 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        thread.interrupt();
-        thread = null;
-        try {
-            if (audio != null) {
-                audio.stop();
-                audio.release();
-                audio = null;
-            }
-        } catch (Exception e) {e.printStackTrace();}
     }
 }
