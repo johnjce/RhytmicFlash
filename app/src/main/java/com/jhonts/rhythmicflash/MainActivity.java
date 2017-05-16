@@ -7,17 +7,28 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.View;
+import android.widget.SeekBar;
 
 import java.util.Random;
 
+import com.apptracker.android.listener.AppModuleListener;
+import com.apptracker.android.track.AppTracker;
+
+
 public class MainActivity extends Activity {
+    /**----------------publicidad------------------**/
+    private static final String APP_API_KEY 		    = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf"; //<-real - prueba-> // "dAICGF8bVShbB7rYTaQs9vI7gLloSI1l"; // change this to your App specific API KEY
+    /*----------------publicidad------------------**/
     private double lastLevel = 0;
     private int bufferSize;
     private final int min = 15;
@@ -30,14 +41,38 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         View mainView = new View(this);
-        setContentView(mainView);
+
+
+        if(savedInstanceState == null){
+            AppTracker.setModuleListener(leadboltListener);
+            AppTracker.startSession(getApplicationContext(), APP_API_KEY);
+
+            AppTracker.destroyModule();
+            AppTracker.loadModuleToCache(getApplicationContext(), "inapp");
+
+            // aqui llamo publicidad
+            if(AppTracker.isAdReady("inapp")) AppTracker.loadModule(mainView.getContext(), "inapp");
+            AppTracker.destroyModule();
+
+        }
+        SeekBar barvolumen = new SeekBar(this);
+        barvolumen.setMax(2000);
+        barvolumen.setIndeterminate(true);
+        ShapeDrawable thumb = new ShapeDrawable(new OvalShape());
+
+        thumb.setIntrinsicHeight(80);
+        thumb.setIntrinsicWidth(30);
+        barvolumen.setThumb(thumb);
+        barvolumen.setProgress(1);
+        barvolumen.setVisibility(View.VISIBLE);
+        barvolumen.setBackgroundColor(Color.BLUE);
 
         try {
             bufferSize = AudioRecord
                         .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
                         AudioFormat.ENCODING_PCM_16BIT);
         } catch (Exception e) {
-            android.util.Log.e("TrackingFlow", "Exception", e);
+            Log.e("TrackingFlow", "Exception", e);
         }
     }
 
@@ -148,4 +183,34 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
     }
+
+    /**----------------publicidad------------------**/
+    private AppModuleListener leadboltListener = new AppModuleListener() {
+        @Override
+        public void onModuleCached(final String placement) {
+
+        }
+        @Override
+        public void onModuleClicked(String placement) {
+            Log.i("AppTracker", "Ad clicked by user - "+ placement);
+            // SharedPreferences saves = getSharedPreferences(coins, 0);
+            //view.setSocket(saves.getInt(coins, 0));
+        }
+
+        @Override
+        public void onModuleClosed(final String placement) {}
+
+        @Override
+        public void onModuleFailed(String placement, String error, boolean isCache) { }
+
+        @Override
+        public void onModuleLoaded(String s) {
+
+            // Add code here to pause game and/or all media including audio
+        }
+
+        @Override
+        public void onMediaFinished(boolean b) { }
+    };
+    /**----------------publicidad------------------**/
 }
