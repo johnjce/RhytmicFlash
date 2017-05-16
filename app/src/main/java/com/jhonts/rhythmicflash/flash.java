@@ -31,7 +31,7 @@ class flash extends Activity{
         flashOn = true;
     }
 
-    private static void flashOn() {
+    static void flashOn() {
         if(objFlash == null || flashParameters == null) return;
         flashParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
         objFlash.setParameters(flashParameters);

@@ -3,10 +3,12 @@ package com.jhonts.rhythmicflash;
   @author John Jairo Castaño Echeverri
  * Copyright (c) <2017> <jjce- ..::jhonts::..>
  */
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.media.AudioFormat;
@@ -15,27 +17,34 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
+import java.text.AttributedCharacterIterator;
 import java.util.Random;
 
 import com.apptracker.android.listener.AppModuleListener;
 import com.apptracker.android.track.AppTracker;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity{
     /**----------------publicidad------------------**/
     private static final String APP_API_KEY 		    = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf"; //<-real - prueba-> // "dAICGF8bVShbB7rYTaQs9vI7gLloSI1l"; // change this to your App specific API KEY
     /*----------------publicidad------------------**/
     private double lastLevel = 0;
     private int bufferSize;
-    private final int min = 15;
+    private int min = 15;
     private static final int SAMPLE_DELAY = 75;
     private static final int sampleRate = 8000;
     private AudioRecord audio;
     private Thread thread;
+    private View decorView;
+    private SeekBar sensitibility;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +52,7 @@ public class MainActivity extends Activity {
         View mainView = new View(this);
 
 
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             AppTracker.setModuleListener(leadboltListener);
             AppTracker.startSession(getApplicationContext(), APP_API_KEY);
 
@@ -51,26 +60,18 @@ public class MainActivity extends Activity {
             AppTracker.loadModuleToCache(getApplicationContext(), "inapp");
 
             // aqui llamo publicidad
-            if(AppTracker.isAdReady("inapp")) AppTracker.loadModule(mainView.getContext(), "inapp");
+            //if(AppTracker.isAdReady("inapp")) AppTracker.loadModule(mainView.getContext(), "inapp");
             AppTracker.destroyModule();
 
         }
-        SeekBar barvolumen = new SeekBar(this);
-        barvolumen.setMax(2000);
-        barvolumen.setIndeterminate(true);
-        ShapeDrawable thumb = new ShapeDrawable(new OvalShape());
 
-        thumb.setIntrinsicHeight(80);
-        thumb.setIntrinsicWidth(30);
-        barvolumen.setThumb(thumb);
-        barvolumen.setProgress(1);
-        barvolumen.setVisibility(View.VISIBLE);
-        barvolumen.setBackgroundColor(Color.BLUE);
+        sensitibility = getSensitibility();
+        setContentView(sensitibility);
 
         try {
             bufferSize = AudioRecord
-                        .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT);
+                    .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
+                            AudioFormat.ENCODING_PCM_16BIT);
         } catch (Exception e) {
             Log.e("TrackingFlow", "Exception", e);
         }
@@ -80,8 +81,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        decorView = getWindow().getDecorView();
 
-        final View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
@@ -213,4 +214,34 @@ public class MainActivity extends Activity {
         public void onMediaFinished(boolean b) { }
     };
     /**----------------publicidad------------------**/
+    
+    public SeekBar getSensitibility() {
+        sensitibility = new SeekBar(this);
+        sensitibility.setMax(400);
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        final int width = metrics.widthPixels; // ancho absoluto en pixels
+        final int height = metrics.heightPixels; // alto absoluto en pixels
+        sensitibility.setVerticalScrollbarPosition(height-10);
+        sensitibility.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
+        sensitibility.setThumb(getResources().getDrawable(R.mipmap.seekbar_thumb));
+        sensitibility.setY(2);
+        sensitibility.setX(0);
+        sensitibility.setProgress(30);
+        sensitibility.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                Log.v("seekbar", "heigth " + height);
+                min = i;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
+        return sensitibility;
+    }
 }
