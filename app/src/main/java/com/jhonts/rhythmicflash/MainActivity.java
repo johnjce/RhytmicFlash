@@ -3,28 +3,19 @@ package com.jhonts.rhythmicflash;
   @author John Jairo Castaño Echeverri
  * Copyright (c) <2017> <jjce- ..::jhonts::..>
  */
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
-import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
-import android.widget.TextView;
-
-import java.text.AttributedCharacterIterator;
 import java.util.Random;
 
 import com.apptracker.android.listener.AppModuleListener;
@@ -60,7 +51,7 @@ public class MainActivity extends Activity{
             AppTracker.loadModuleToCache(getApplicationContext(), "inapp");
 
             // aqui llamo publicidad
-            //if(AppTracker.isAdReady("inapp")) AppTracker.loadModule(mainView.getContext(), "inapp");
+            if(AppTracker.isAdReady("inapp")) AppTracker.loadModule(mainView.getContext(), "inapp");
             AppTracker.destroyModule();
 
         }
@@ -77,21 +68,17 @@ public class MainActivity extends Activity{
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onResume() {
         super.onResume();
         decorView = getWindow().getDecorView();
-
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
 
         audio = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, bufferSize);
 
         audio.startRecording();
+        final flash led = new flash();
         thread = new Thread(new Runnable() {
             public void run() {
                 while(thread != null && !thread.isInterrupted()){
@@ -103,9 +90,9 @@ public class MainActivity extends Activity{
                         public void run() {
                             decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel,min)));
                             if(lastLevel <= min){
-                                com.jhonts.rhythmicflash.flash.flashOff();
+                                led.flashOff();
                             }else {
-                                com.jhonts.rhythmicflash.flash.swichFlash();
+                                led.swichFlash();
                             }
                         }
                     });
@@ -171,7 +158,7 @@ public class MainActivity extends Activity{
     private void readAudioBuffer() {
         try {
             short[] buffer = new short[bufferSize];
-            int bufferReadResult = 1;
+            int bufferReadResult;
             if (audio != null) {
                 bufferReadResult = audio.read(buffer, 0, bufferSize);
                 double sumLevel = 0;
@@ -214,17 +201,17 @@ public class MainActivity extends Activity{
         public void onMediaFinished(boolean b) { }
     };
     /**----------------publicidad------------------**/
-    
+
     public SeekBar getSensitibility() {
         sensitibility = new SeekBar(this);
         sensitibility.setMax(400);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        final int width = metrics.widthPixels; // ancho absoluto en pixels
+        //final int width = metrics.widthPixels; // ancho absoluto en pixels
         final int height = metrics.heightPixels; // alto absoluto en pixels
         sensitibility.setVerticalScrollbarPosition(height-10);
         sensitibility.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
-        sensitibility.setThumb(getResources().getDrawable(R.mipmap.seekbar_thumb));
+        sensitibility.setThumb(getResources().getDrawable(R.mipmap.seek_thumb));
         sensitibility.setY(2);
         sensitibility.setX(0);
         sensitibility.setProgress(30);

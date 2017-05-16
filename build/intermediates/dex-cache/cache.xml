@@ -3,30 +3,12 @@
 
     <item
         is-multidex="false"
-        jar="C:\Users\jhonts\.android\build-cache\7733deaa1d0b5ae365b19e1805e09eba8beec53b\output\jars\classes.jar"
-        jumboMode="false"
-        optimize="true"
-        revision="25.0.2"
-        sha1="e03f47f3d1017a093bb3239d4ec47c3447f40744">
-        <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\pre-dexed\debug\classes_b89ecc8788513a06812169c3cd1a22a5384724b6.jar" />
-    </item>
-    <item
-        is-multidex="false"
-        jar="D:\jhonts\Documents\android projects\RhythmicFlash\app\libs\AppTracker.jar"
+        jar="D:\jhonts\Documents\android projects\rhythmicflash2\app\libs\AppTracker.jar"
         jumboMode="false"
         optimize="true"
         revision="25.0.2"
         sha1="33afc2e047973f2629ce8d93b79c24522d05f1dc">
-        <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\pre-dexed\debug\AppTracker_a08ad08351fd9a0953243bb956de6be5d6f57f07.jar" />
-    </item>
-    <item
-        is-multidex="false"
-        jar="C:\Users\jhonts\.android\build-cache\112b8f84ba92dba15007f2c9fae982d034d7b466\output\jars\classes.jar"
-        jumboMode="false"
-        optimize="true"
-        revision="25.0.2"
-        sha1="7521486d9bfd2cd9e756e0cf75ed7d97f2ce2d3b">
-        <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\pre-dexed\debug\classes_7b3ab09bd4906a496c8fc04350803c2674f89631.jar" />
+        <dex dex="D:\jhonts\Documents\android projects\rhythmicflash2\app\build\intermediates\pre-dexed\debug\AppTracker_a57dfcb6ec85675f4d06869421d7c7452d273a4c.jar" />
     </item>
 
 </items>
