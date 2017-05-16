@@ -1,12 +1,21 @@
 package com.jhonts.rhythmicflash;
-
+/*
+  @author John Jairo Castaño Echeverri
+ * Copyright (c) <2017> <jjce- ..::jhonts::..>
+ */
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
+
+import java.util.Random;
 
 public class MainActivity extends Activity {
     private static final int sampleRate = 8000;
@@ -15,20 +24,23 @@ public class MainActivity extends Activity {
     private double lastLevel = 0;
     private Thread thread;
     private static final int SAMPLE_DELAY = 75;
-    private ImageView mouthImage;
+    private ImageView backgroundContent;
+
+
+    private final int min = 15;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mouthImage = (ImageView)findViewById(R.id.mounthHolder);
-        mouthImage.setKeepScreenOn(true);
+        backgroundContent = (ImageView)findViewById(R.id.backgroundContent);
+        backgroundContent.setKeepScreenOn(true);
 
         try {
             bufferSize = AudioRecord
-                    .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
-                            AudioFormat.ENCODING_PCM_16BIT);
+                        .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT);
         } catch (Exception e) {
             android.util.Log.e("TrackingFlow", "Exception", e);
         }
@@ -36,6 +48,12 @@ public class MainActivity extends Activity {
 
     protected void onResume() {
         super.onResume();
+
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                      | View.SYSTEM_UI_FLAG_FULLSCREEN;
+                        decorView.setSystemUiVisibility(uiOptions);
+
         audio = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, bufferSize);
@@ -43,36 +61,66 @@ public class MainActivity extends Activity {
         audio.startRecording();
         thread = new Thread(new Runnable() {
             public void run() {
-                while(thread != null && !thread.isInterrupted()){
-                    try{Thread.sleep(SAMPLE_DELAY);}catch(InterruptedException ie){ie.printStackTrace();}
-                    readAudioBuffer();
+            while(thread != null && !thread.isInterrupted()){
+                try{Thread.sleep(SAMPLE_DELAY);}catch(InterruptedException ie){ie.printStackTrace();}
+                readAudioBuffer();
 
-                    runOnUiThread(new Runnable() {
+                runOnUiThread(new Runnable() {
 
-                        @Override
-                        public void run() {
-                            if(lastLevel > 0 && lastLevel <= 50){
-                                mouthImage.setBackgroundColor(Color.BLACK);
-                                com.jhonts.rhythmicflash.flash.apagarFlash();
-                            }else
-                            if(lastLevel > 50 && lastLevel <= 100){
-                                mouthImage.setBackgroundColor(Color.GREEN);
-                                com.jhonts.rhythmicflash.flash.controlarFlash();
-                            }else
-                            if(lastLevel > 100 && lastLevel <= 170){
-                                mouthImage.setBackgroundColor(Color.BLUE);
-                                com.jhonts.rhythmicflash.flash.controlarFlash();
-                            }
-                            if(lastLevel > 170){
-                                mouthImage.setBackgroundColor(Color.RED);
-                                com.jhonts.rhythmicflash.flash.controlarFlash();
-                            }
-                        }
-                    });
-                }
+                    @Override
+                    public void run() {
+                    backgroundContent.setBackgroundColor(Color.parseColor(getColor(lastLevel, min)));
+                    if(lastLevel <= min){
+                        com.jhonts.rhythmicflash.flash.flashOff();
+                    }else {
+                        com.jhonts.rhythmicflash.flash.swichFlash();
+                    }
+                    }
+                });
+            }
             }
         });
         thread.start();
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle(R.string.delete_title);
+        alertDialogBuilder
+            .setMessage(R.string.comfirm_delete)
+            .setCancelable(false)
+            .setPositiveButton(R.string.yes,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            moveTaskToBack(true);
+                            android.os.Process.killProcess(android.os.Process.myPid());
+                            System.exit(1);
+                        }
+                    })
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.cancel();
+                }
+            });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+    }
+
+    private String getColor(double lastLevel, int min) {
+        if(lastLevel<min) return "#000000";
+        Random randomGenerator = new Random();
+        lastLevel+=6;
+        int     r = (int) lastLevel * randomGenerator.nextInt(100)+1,
+                g = (int) lastLevel * randomGenerator.nextInt(100)+1,
+                b = (int) lastLevel * randomGenerator.nextInt(100)+1;
+        String color = String.format("#%02x%02x%02x", r, g, b);
+        if(color.length()>7) {
+            color = color.substring(0,7);
+        }
+        return color;
+
     }
 
     private void readAudioBuffer() {

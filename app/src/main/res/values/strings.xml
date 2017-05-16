@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">RhythmicFlash</string>
-
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="delete_title">¿esta seguro que desea cerrar?</string>
+    <string name="comfirm_delete">Sí hace clic en "si" cerrará la aplicación</string>
+    <string name="yes">Si</string>
+    <string name="cancel">Cancelar</string>
 </resources>
