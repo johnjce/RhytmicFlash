@@ -1,30 +1,41 @@
-package com.jhonts.rhythmicflash;
+package com.jh0nts.rhythmicflash;
 /*
   @author John Jairo Castaño Echeverri
- * Copyright (c) <2017> <jjce- ..::jhonts::..>
+ * Copyright (c) <2017> <jjce- ..::jh0nts::..>
  */
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
+import android.widget.Toast;
+
 import java.util.Random;
 
 import com.apptracker.android.listener.AppModuleListener;
 import com.apptracker.android.track.AppTracker;
 
+import static android.R.attr.targetSdkVersion;
 
-public class MainActivity extends Activity{
-    /**----------------publicidad------------------**/
-    private static final String APP_API_KEY 		    = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf"; //<-real - prueba-> // "dAICGF8bVShbB7rYTaQs9vI7gLloSI1l"; // change this to your App specific API KEY
+
+public class MainActivity extends Activity {
+    /**
+     * ----------------publicidad------------------
+     **/
+    private static final String APP_API_KEY = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf"; //<-real - prueba-> // "dAICGF8bVShbB7rYTaQs9vI7gLloSI1l"; // change this to your App specific API KEY
     /*----------------publicidad------------------**/
     private double lastLevel = 0;
     private int bufferSize;
@@ -35,14 +46,12 @@ public class MainActivity extends Activity{
     private Thread thread;
     private View decorView;
     private SeekBar sensitibility;
-
+    final flash led = new flash();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         View mainView = new View(this);
-
-
         if (savedInstanceState == null) {
             AppTracker.setModuleListener(leadboltListener);
             AppTracker.startSession(getApplicationContext(), APP_API_KEY);
@@ -51,7 +60,8 @@ public class MainActivity extends Activity{
             AppTracker.loadModuleToCache(getApplicationContext(), "inapp");
 
             // aqui llamo publicidad
-            if(AppTracker.isAdReady("inapp")) AppTracker.loadModule(mainView.getContext(), "inapp");
+            if (AppTracker.isAdReady("inapp"))
+                AppTracker.loadModule(mainView.getContext(), "inapp");
             AppTracker.destroyModule();
 
         }
@@ -77,23 +87,32 @@ public class MainActivity extends Activity{
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, bufferSize);
 
-        audio.startRecording();
-        final flash led = new flash();
+        if (selfPermissionGranted("Manifest.permission.RECORD_AUDIO")) audio.startRecording();
+
         thread = new Thread(new Runnable() {
             public void run() {
-                while(thread != null && !thread.isInterrupted()){
-                    try{Thread.sleep(SAMPLE_DELAY);}catch(InterruptedException ie){ie.printStackTrace();}
+                while (thread != null && !thread.isInterrupted()) {
+                    try {
+                        Thread.sleep(SAMPLE_DELAY);
+                    } catch (InterruptedException ie) {
+                        ie.printStackTrace();
+                    }
                     readAudioBuffer();
 
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel,min)));
-                            if(lastLevel <= min){
-                                led.flashOff();
-                            }else {
-                                led.swichFlash();
+                            decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel, min)));
+                            if (selfPermissionGranted("Manifest.permission.CAMERA")) {
+                                if (lastLevel <= min) {
+                                    led.flashOff();
+                                } else {
+                                    led.swichFlash();
+                                }
+                            }else{
+                                Log.v("No Tiene", "permisos activados");
                             }
+
                         }
                     });
                 }
@@ -137,19 +156,21 @@ public class MainActivity extends Activity{
                 audio.release();
                 audio = null;
             }
-        } catch (Exception e) {e.printStackTrace();}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private String getColor(double lastLevel, int min) {
-        if(lastLevel<min) return "#000000";
+        if (lastLevel < min) return "#000000";
         Random randomGenerator = new Random();
-        lastLevel+=6;
-        int     r = (int) lastLevel * randomGenerator.nextInt(100)+1,
-                g = (int) lastLevel * randomGenerator.nextInt(100)+1,
-                b = (int) lastLevel * randomGenerator.nextInt(100)+1;
+        lastLevel += 6;
+        int r = (int) lastLevel * randomGenerator.nextInt(100) + 1,
+                g = (int) lastLevel * randomGenerator.nextInt(100) + 1,
+                b = (int) lastLevel * randomGenerator.nextInt(100) + 1;
         String color = String.format("#%02x%02x%02x", r, g, b);
-        if(color.length()>7) {
-            color = color.substring(0,7);
+        if (color.length() > 7) {
+            color = color.substring(0, 7);
         }
         return color;
 
@@ -172,35 +193,40 @@ public class MainActivity extends Activity{
         }
     }
 
-    /**----------------publicidad------------------**/
+    /**
+     * ----------------publicidad------------------
+     **/
     private AppModuleListener leadboltListener = new AppModuleListener() {
         @Override
         public void onModuleCached(final String placement) {
 
         }
+
         @Override
         public void onModuleClicked(String placement) {
-            Log.i("AppTracker", "Ad clicked by user - "+ placement);
-            // SharedPreferences saves = getSharedPreferences(coins, 0);
-            //view.setSocket(saves.getInt(coins, 0));
+            Log.i("AppTracker", "Ad clicked by user - " + placement);
         }
 
         @Override
-        public void onModuleClosed(final String placement) {}
+        public void onModuleClosed(final String placement) {
+        }
 
         @Override
-        public void onModuleFailed(String placement, String error, boolean isCache) { }
+        public void onModuleFailed(String placement, String error, boolean isCache) {
+        }
 
         @Override
         public void onModuleLoaded(String s) {
-
-            // Add code here to pause game and/or all media including audio
         }
 
         @Override
-        public void onMediaFinished(boolean b) { }
+        public void onMediaFinished(boolean b) {
+        }
     };
-    /**----------------publicidad------------------**/
+
+    /**
+     * ----------------publicidad------------------
+     **/
 
     public SeekBar getSensitibility() {
         sensitibility = new SeekBar(this);
@@ -209,7 +235,7 @@ public class MainActivity extends Activity{
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         //final int width = metrics.widthPixels; // ancho absoluto en pixels
         final int height = metrics.heightPixels; // alto absoluto en pixels
-        sensitibility.setVerticalScrollbarPosition(height-10);
+        sensitibility.setVerticalScrollbarPosition(height - 10);
         sensitibility.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
         sensitibility.setThumb(getResources().getDrawable(R.mipmap.seek_thumb));
         sensitibility.setY(2);
@@ -224,11 +250,33 @@ public class MainActivity extends Activity{
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
         return sensitibility;
+    }
+
+    public boolean selfPermissionGranted(String permission) {
+        // For Android < Android M, self permissions are always granted.
+        boolean result = true;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            if (targetSdkVersion >= Build.VERSION_CODES.M) {
+                // targetSdkVersion >= Android M, we can
+                // use Context#checkSelfPermission
+                result = this.checkSelfPermission(permission)
+                        == PackageManager.PERMISSION_GRANTED;
+            } else {
+                // targetSdkVersion < Android M, we have to use PermissionChecker
+                result = PermissionChecker.checkSelfPermission(this, permission)
+                        == PermissionChecker.PERMISSION_GRANTED;
+            }
+        }
+        return result;
     }
 }

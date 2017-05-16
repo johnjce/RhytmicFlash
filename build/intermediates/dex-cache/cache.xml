@@ -2,13 +2,13 @@
 <items version="2" >
 
     <item
-        is-multidex="false"
-        jar="D:\jhonts\Documents\android projects\rhythmicflash2\app\libs\AppTracker.jar"
-        jumboMode="false"
+        is-multidex="true"
+        jar="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
+        jumboMode="true"
         optimize="true"
         revision="25.0.2"
-        sha1="33afc2e047973f2629ce8d93b79c24522d05f1dc">
-        <dex dex="D:\jhonts\Documents\android projects\rhythmicflash2\app\build\intermediates\pre-dexed\debug\AppTracker_a57dfcb6ec85675f4d06869421d7c7452d273a4c.jar" />
+        sha1="37e0bb1010236b7f07bcca88daede337ec1f3a61">
+        <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run-bootstrap_1c13eb8068c64777780b083b0f1c4231f0646cb4\classes.dex" />
     </item>
 
 </items>

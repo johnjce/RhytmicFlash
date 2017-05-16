@@ -1,4 +1,4 @@
-package com.jhonts.rhythmicflash;
+package com.jh0nts.rhythmicflash;
 import java.util.List;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -53,7 +53,7 @@ public class flash {
 
 
             if (modosFlash != null && modosFlash.contains(Parameters.FLASH_MODE_TORCH)) {
-                //Set the flash parameter to use the torch 
+                //Set the flash parameter to use the torch
                 parametrosCamara.setFlashMode(Parameters.FLASH_MODE_TORCH);
                 try {
                     dispCamara.setParameters(parametrosCamara);
