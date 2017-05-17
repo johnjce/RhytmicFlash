@@ -15,13 +15,11 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
-import android.widget.Toast;
 
 import java.util.Random;
 
