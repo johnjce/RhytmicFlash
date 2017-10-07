@@ -1,55 +1,52 @@
 package com.jh0nts.rhythmicflash;
-/*
-  @author John Jairo Castaño Echeverri
- * Copyright (c) <2017> <jjce- ..::jh0nts::..>
- */
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.PermissionChecker;
-import android.util.DisplayMetrics;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
-import android.widget.SeekBar;
-
-import java.util.Random;
+import android.widget.Toast;
 
 import com.apptracker.android.listener.AppModuleListener;
 import com.apptracker.android.track.AppTracker;
 
-import static android.R.attr.targetSdkVersion;
-
+import java.util.Random;
 
 public class MainActivity extends Activity {
-    /**
-     * ----------------publicidad------------------
-     **/
-    private static final String APP_API_KEY = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf"; //<-real - prueba-> // "dAICGF8bVShbB7rYTaQs9vI7gLloSI1l"; // change this to your App specific API KEY
-    /*----------------publicidad------------------**/
-    private double lastLevel = 0;
-    private int bufferSize;
-    private int min = 15;
+    //---------------publicidad-----------------//
+    private static final String APP_API_KEY = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf";
+    //---------------publicidad-----------------//
     private static final int SAMPLE_DELAY = 75;
-    private static final int sampleRate = 8000;
-    private AudioRecord audio;
+    private static final int MIN = 15;
+    private double lastLevel = 0;
     private Thread thread;
     private View decorView;
-    private SeekBar sensitibility;
-    final flash led = new flash();
+    Flash led;
+    Micro micro;
+    Random randomGenerator = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        View mainView = new View(this);
+        decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.INVISIBLE);
+
+        //.................. control de la publicidad .....................//
         if (savedInstanceState == null) {
             AppTracker.setModuleListener(leadboltListener);
             AppTracker.startSession(getApplicationContext(), APP_API_KEY);
@@ -58,62 +55,121 @@ public class MainActivity extends Activity {
             AppTracker.loadModuleToCache(getApplicationContext(), "inapp");
 
             // aqui llamo publicidad
-            if (AppTracker.isAdReady("inapp"))
-                AppTracker.loadModule(mainView.getContext(), "inapp");
+            if (AppTracker.isAdReady("inapp")) {
+                AppTracker.loadModule(new View(this).getContext(), "inapp");
+            }
             AppTracker.destroyModule();
 
         }
+        //.................. control de la publicidad .....................*/
 
-        sensitibility = getSensitibility();
-        setContentView(sensitibility);
+        if(verifyPermission()){
+            if(led ==null) {
+                led= new Flash();
+                if(micro ==null) {
+                    micro = new Micro();
+                }
+            }
+        }
+    }
 
-        try {
-            bufferSize = AudioRecord
-                    .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
-                            AudioFormat.ENCODING_PCM_16BIT);
-        } catch (Exception e) {
-            Log.e("TrackingFlow", "Exception", e);
+    private boolean verifyPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestRationalPermission();
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
+                Log.v("Error", "Permiso denegado, camara.");
+                return false;
+            } else if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+                Log.v("Error", "Permiso denegado, microfono.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void requestRationalPermission() {
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.CAMERA)) {
+            dialogUser("El permiso de la camara es necesario para encender la luz");
+        }
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.RECORD_AUDIO)) {
+            dialogUser("El permiso del microfono es necesario para que las luces parpadeen");
+        }
+    }
+
+    private void dialogUser(String text) {
+        Toast.makeText(getApplicationContext(), text , Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 0: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    led = new Flash();
+                }
+                if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    dialogUser("Sin permiso de la camara es no se enciende la luz");
+                    led=null;
+                }
+                break;
+            }
+            case 1: {
+                //Si la petición es cancelada, el resultado estará vacío.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.v("Error", "Permiso aceptado, se podría acceder al microfono del dispositivo.");
+                    micro = new Micro();
+                } else {
+                    Log.v("Error", "Permiso denegado. Desactivar la funcionalidad que dependía de dicho permiso.");
+                    micro = null;
+                }
+                break;
+            }
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                break;
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        decorView = getWindow().getDecorView();
-
-        audio = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, bufferSize);
-
-        if (selfPermissionGranted("Manifest.permission.RECORD_AUDIO")) audio.startRecording();
 
         thread = new Thread(new Runnable() {
             public void run() {
-                while (thread != null && !thread.isInterrupted()) {
-                    try {
-                        Thread.sleep(SAMPLE_DELAY);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                    readAudioBuffer();
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel, min)));
-                            if (selfPermissionGranted("Manifest.permission.CAMERA")) {
-                                if (lastLevel <= min) {
-                                    led.flashOff();
-                                } else {
-                                    led.swichFlash();
-                                }
-                            }else{
-                                Log.v("No Tiene", "permisos activados");
-                            }
-
-                        }
-                    });
+            while (thread != null && !thread.isInterrupted()) {
+                try {
+                    Thread.sleep(SAMPLE_DELAY);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
                 }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                    if(micro != null ) {
+                        lastLevel = micro.getLastLevel();
+                    }else {
+                        lastLevel = (double) randomGenerator.nextInt(100) + 1;
+                    }
+                    Log.v("Error", "Permiso denegado. Desactivar la funcionalidad que dependía de dicho permiso.");
+
+                    decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel, MIN)));
+                    if(led != null) {
+                        if (lastLevel <= MIN) {
+                            led.flashOff();
+                        } else {
+                            led.swichFlash();
+                        }
+                    }
+                    }
+                });
+            }
             }
         });
         thread.start();
@@ -146,13 +202,17 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        thread.interrupt();
-        thread = null;
+
         try {
-            if (audio != null) {
-                audio.stop();
-                audio.release();
-                audio = null;
+            thread.interrupt();
+            thread = null;
+            if( led != null ) {
+                led.dispCamara.release();
+                led = null;
+            }
+            if( micro != null ) {
+                led.dispCamara.release();
+                led = null;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,45 +220,22 @@ public class MainActivity extends Activity {
     }
 
     private String getColor(double lastLevel, int min) {
-        if (lastLevel < min) return "#000000";
-        Random randomGenerator = new Random();
+        if (lastLevel <=  min) return "#000000";
         lastLevel += 6;
-        int r = (int) lastLevel * randomGenerator.nextInt(100) + 1,
-                g = (int) lastLevel * randomGenerator.nextInt(100) + 1,
-                b = (int) lastLevel * randomGenerator.nextInt(100) + 1;
+        int r = (int) lastLevel * randomGenerator.nextInt(100) + 10,
+                g = (int) lastLevel * randomGenerator.nextInt(100) + 10,
+                b = (int) lastLevel * randomGenerator.nextInt(100) + 10;
         String color = String.format("#%02x%02x%02x", r, g, b);
         if (color.length() > 7) {
             color = color.substring(0, 7);
         }
         return color;
-
     }
 
-    private void readAudioBuffer() {
-        try {
-            short[] buffer = new short[bufferSize];
-            int bufferReadResult;
-            if (audio != null) {
-                bufferReadResult = audio.read(buffer, 0, bufferSize);
-                double sumLevel = 0;
-                for (int i = 0; i < bufferReadResult; i++) {
-                    sumLevel += buffer[i];
-                }
-                lastLevel = Math.abs((sumLevel / bufferReadResult));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * ----------------publicidad------------------
-     **/
+    //---------------publicidad-----------------//
     private AppModuleListener leadboltListener = new AppModuleListener() {
         @Override
-        public void onModuleCached(final String placement) {
-
-        }
+        public void onModuleCached(final String placement) { }
 
         @Override
         public void onModuleClicked(String placement) {
@@ -206,75 +243,17 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        public void onModuleClosed(final String placement) {
-        }
+        public void onModuleClosed(final String placement) { }
 
         @Override
-        public void onModuleFailed(String placement, String error, boolean isCache) {
-        }
+        public void onModuleFailed(String placement, String error, boolean isCache) { }
 
         @Override
-        public void onModuleLoaded(String s) {
-        }
+        public void onModuleLoaded(String s) { }
 
         @Override
-        public void onMediaFinished(boolean b) {
-        }
+        public void onMediaFinished(boolean b) { }
     };
+    // ----------------publicidad-----------------//
 
-    /**
-     * ----------------publicidad------------------
-     **/
-
-    public SeekBar getSensitibility() {
-        sensitibility = new SeekBar(this);
-        sensitibility.setMax(400);
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        //final int width = metrics.widthPixels; // ancho absoluto en pixels
-        final int height = metrics.heightPixels; // alto absoluto en pixels
-        sensitibility.setVerticalScrollbarPosition(height - 10);
-        sensitibility.setProgressDrawable(new ColorDrawable(Color.TRANSPARENT));
-        sensitibility.setThumb(getResources().getDrawable(R.mipmap.seek_thumb));
-        sensitibility.setY(2);
-        sensitibility.setX(0);
-        sensitibility.setProgress(30);
-        sensitibility.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                Log.v("seekbar", "heigth " + height);
-                min = i;
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-        return sensitibility;
-    }
-
-    public boolean selfPermissionGranted(String permission) {
-        // For Android < Android M, self permissions are always granted.
-        boolean result = true;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            if (targetSdkVersion >= Build.VERSION_CODES.M) {
-                // targetSdkVersion >= Android M, we can
-                // use Context#checkSelfPermission
-                result = this.checkSelfPermission(permission)
-                        == PackageManager.PERMISSION_GRANTED;
-            } else {
-                // targetSdkVersion < Android M, we have to use PermissionChecker
-                result = PermissionChecker.checkSelfPermission(this, permission)
-                        == PermissionChecker.PERMISSION_GRANTED;
-            }
-        }
-        return result;
-    }
 }

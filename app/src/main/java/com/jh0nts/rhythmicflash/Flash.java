@@ -1,15 +1,16 @@
 package com.jh0nts.rhythmicflash;
 import java.util.List;
+
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.util.Log;
 
-public class flash {
+class Flash {
 
-    private Camera dispCamara;
+    Camera dispCamara;
     private boolean state = false;
 
-    flash() {
+    Flash() {
         try {
             dispCamara = Camera.open();
         } catch( Exception e ) {
@@ -17,12 +18,6 @@ public class flash {
         }
     }
 
-    protected void onPause() {
-        if( dispCamara != null ) {
-            dispCamara.release();
-            dispCamara = null;
-        }
-    }
 
     void flashOff(){
         if( dispCamara != null ){
@@ -35,15 +30,14 @@ public class flash {
         state = false;
     }
 
-    void swichFlash(){
-        if(!state){
+    void swichFlash() {
+        if(!state)
             flashOn();
-        }else{
+        else
             flashOff();
-        }
     }
 
-    private void flashOn() {
+    void flashOn() {
 
         if( dispCamara != null ){
             Parameters parametrosCamara = dispCamara.getParameters();

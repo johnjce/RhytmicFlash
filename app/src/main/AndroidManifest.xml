@@ -4,16 +4,15 @@
     package="com.jh0nts.rhythmicflash">
     <!-- permisos para encender el flash-->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" />
     <!-- permisos para encender el microfono -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <!-- Remove the following permissions, if you don't want ads -->
+    <!-- permisos para acceder a la publicidad ->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Remove the lines above, if you don't want ads -->
+    <!- permisos para acceder a la publicidad -->
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
