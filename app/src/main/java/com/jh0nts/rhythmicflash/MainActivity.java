@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+
 import com.apptracker.android.listener.AppModuleListener;
 import com.apptracker.android.track.AppTracker;
 
@@ -24,11 +25,11 @@ public class MainActivity extends Activity {
     //---------------publicidad-----------------//
     private static final String APP_API_KEY = "mq9zUPkFjZBP6K6G9FH2HevQY60pHUHf";
     //---------------publicidad-----------------//
-    private static final int SAMPLE_DELAY = 75;
-    private static final int MIN = 15;
+    private int delay = 50;
     private double lastLevel = 0;
     private Thread thread;
     private View decorView;
+    double prevLastLevel;
     Flash led;
     Micro micro;
     Random randomGenerator = new Random();
@@ -81,7 +82,8 @@ public class MainActivity extends Activity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
                 Log.v("Error", "Permiso denegado, camara.");
                 return false;
-            } else if (ContextCompat.checkSelfPermission(this,
+            }
+            if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
                 Log.v("Error", "Permiso denegado, microfono.");
@@ -108,8 +110,7 @@ public class MainActivity extends Activity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case 0: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     led = new Flash();
                 }
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
@@ -141,35 +142,33 @@ public class MainActivity extends Activity {
 
         thread = new Thread(new Runnable() {
             public void run() {
-            while (thread != null && !thread.isInterrupted()) {
-                try {
-                    Thread.sleep(SAMPLE_DELAY);
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                }
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                    if(micro != null ) {
-                        lastLevel = micro.getLastLevel();
-                    }else {
-                        lastLevel = (double) randomGenerator.nextInt(100) + 1;
-                    }
-                    Log.v("Error", "Permiso denegado. Desactivar la funcionalidad que dependía de dicho permiso.");
-
-                    decorView.setBackgroundColor(Color.parseColor(getColor(lastLevel, MIN)));
-                    if(led != null) {
-                        if (lastLevel <= MIN) {
-                            led.flashOff();
-                        } else {
-                            led.swichFlash();
+                while (thread != null && !thread.isInterrupted()) {
+                    try{
+                        thread.sleep(delay);
+                    }catch (InterruptedException e){ }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                        if(micro != null ) {
+                            lastLevel = micro.getLastLevel();
+                        }else {
+                            lastLevel = (double) randomGenerator.nextInt(999) + 1;
                         }
-                    }
-                    }
-                });
-            }
+
+                        if(led != null) {
+                            if(lastLevel>=15) {
+                                if (lastLevel - prevLastLevel >= 20) {
+                                    led.flashOn();
+                                    changeColor();
+                                }
+                                prevLastLevel = lastLevel;
+                            }
+                            led.flashOff();
+                        }
+                        }
+                    });
+                }
             }
         });
         thread.start();
@@ -211,25 +210,33 @@ public class MainActivity extends Activity {
                 led = null;
             }
             if( micro != null ) {
-                led.dispCamara.release();
-                led = null;
+                micro.stoped();
+                micro = null;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private String getColor(double lastLevel, int min) {
-        if (lastLevel <=  min) return "#000000";
-        lastLevel += 6;
-        int r = (int) lastLevel * randomGenerator.nextInt(100) + 10,
-                g = (int) lastLevel * randomGenerator.nextInt(100) + 10,
-                b = (int) lastLevel * randomGenerator.nextInt(100) + 10;
+    private void changeColor() {
+        int r = randomGenerator.nextInt(254),
+            g = randomGenerator.nextInt(254),
+            b = randomGenerator.nextInt(254);
+
         String color = String.format("#%02x%02x%02x", r, g, b);
+
         if (color.length() > 7) {
             color = color.substring(0, 7);
         }
-        return color;
+
+        decorView.setBackgroundColor(Color.parseColor(color));
+        Log.v("info", "color: "+ color);
+        try {
+            thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     //---------------publicidad-----------------//

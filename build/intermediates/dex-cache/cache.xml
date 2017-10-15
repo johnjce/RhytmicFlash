@@ -3,11 +3,29 @@
 
     <item
         is-multidex="true"
+        jar="D:\jhonts\Documents\android projects\RhythmicFlash\app\libs\AppTracker.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="33afc2e047973f2629ce8d93b79c24522d05f1dc">
+        <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\transforms\dex\debug\folders\1000\2\AppTracker_a08ad08351fd9a0953243bb956de6be5d6f57f07\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="3be78ebc2706b2e1fe2f12d5726887a92d6c183b">
+        <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run_7b51e3ee5e3bdc1a30cb01baba071f3867fd5180\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
         jar="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
         jumboMode="true"
         optimize="true"
-        revision="25.0.2"
-        sha1="37e0bb1010236b7f07bcca88daede337ec1f3a61">
+        revision="25.0.3"
+        sha1="460ebcf1b6e18c17b119eda4690988e2c25aa717">
         <dex dex="D:\jhonts\Documents\android projects\RhythmicFlash\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run-bootstrap_1c13eb8068c64777780b083b0f1c4231f0646cb4\classes.dex" />
     </item>
 

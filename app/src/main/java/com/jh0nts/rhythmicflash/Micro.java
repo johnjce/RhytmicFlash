@@ -14,11 +14,11 @@ class Micro {
     Micro() {
         try {
             bufferSize = AudioRecord
-                    .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO,
+                    .getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_STEREO,
                             AudioFormat.ENCODING_PCM_16BIT);
 
             audio = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
-                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.CHANNEL_IN_STEREO,
                     AudioFormat.ENCODING_PCM_16BIT, bufferSize);
 
             audio.startRecording();
@@ -34,6 +34,11 @@ class Micro {
         return lastLevel;
     }
 
+    public void stoped() {
+        if (audio != null) {
+            audio.stop();
+        }
+    }
     private void readAudioBuffer() {
         try {
             short[] buffer = new short[bufferSize];

@@ -8,7 +8,7 @@ import android.util.Log;
 class Flash {
 
     Camera dispCamara;
-    private boolean state = false;
+    boolean state = false;
 
     Flash() {
         try {
@@ -31,10 +31,12 @@ class Flash {
     }
 
     void swichFlash() {
-        if(!state)
+        if(!state) {
             flashOn();
-        else
+        }
+        else {
             flashOff();
+        }
     }
 
     void flashOn() {
@@ -63,4 +65,5 @@ class Flash {
         }
         state = true;
     }
+
 }
